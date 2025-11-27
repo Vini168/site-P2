@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OfficeSupply Online - Kit Escritório Premium (Controle)</title>
+    <link rel="stylesheet" href="style-control.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>OfficeSupply Online</h1>
+            <nav>
+                <ul>
+                    <li><a href="#">Início</a></li>
+                    <li><a href="#">Produtos</a></li>
+                    <li><a href="#">Promoções</a></li>
+                    <li><a href="#">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="product-detail">
+            <div class="product-image">
+                <img src="img001.jpeg" alt="Kit Escritório Premium">
+            </div>
+            <div class="product-info" data-product-id="kit-001" data-margin-flag="high">
+                <h2 class="product-title">Kit Escritório Premium Clássico</h2>
+                <p class="product-category">Categoria: Kits Essenciais</p>
+                <div class="product-price">
+                    <span class="current-price">R$ 299,90</span>
+                </div>
+
+                <!-- Módulo A/B: Value Per Use (aparece apenas na Variante B) -->
+                <div id="value-per-use" class="value-per-use" aria-hidden="true">
+                    <div class="vpu-badge">Alto Valor</div>
+                    <div class="vpu-main">
+                        <div class="vpu-cost">Custo por uso estimado: <strong id="vpu-cost">R$ 0,00 / uso</strong></div>
+                        <button id="vpu-more" class="vpu-more">Como calculamos?</button>
+                    </div>
+                    <ul class="vpu-benefits">
+                        <li>Alta durabilidade — menos reposição ao longo do ano</li>
+                        <li>Melhor relação custo-benefício por uso</li>
+                        <li>Garantia estendida incluída</li>
+                    </ul>
+                </div>
+
+                <p class="product-description">
+                    Um kit completo com itens essenciais de alta qualidade para o seu dia a dia no escritório. Inclui
+                    canetas, cadernos, post-its e organizadores. Perfeito para quem busca funcionalidade.
+                </p>
+
+                <button class="add-to-cart-btn">Adicionar ao Carrinho</button>
+
+                <!-- Widget de bundle simples -->
+                <div class="bundle-widget" id="bundle-widget" aria-hidden="true">
+                    <label class="bundle-checkbox">
+                        <input type="checkbox" id="bundle-optin" />
+                        Adicionar kit de reposição (estojo + 2 canetas) — <span class="bundle-price">R$ 39,90</span>
+                    </label>
+                </div>
+
+                <div class="product-features">
+                    <h3>Características:</h3>
+                    <ul>
+                        <li>Canetas esferográficas de ponta fina</li>
+                        <li>Caderno capa dura A5</li>
+                        <li>Bloco de notas adesivas</li>
+                        <li>Organizador de mesa compacto</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="featured-products">
+            <h2>Outros Produtos que Você Pode Gostar</h2>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="mouse.jpg" alt="Mouse Ergonômico Bluetooth">
+                    <h3>Mouse Ergonômico Bluetooth Silence</h3>
+                    <p class="card-category">Categoria: Tecnologia Essencial</p>
+                    <p class="card-price">R$ 149,90</p>
+                    <button class="add-to-cart-btn-small">Ver Detalhes</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2025 OfficeSupply Online — Todos os direitos reservados</p>
+    </footer>
+
+    <!-- JSON com esquema de eventos para instrumentação (pode ser usado pela equipe de analytics) -->
+    <script type="application/json" id="ab-event-schema">
+    {
+        "events": {
+            "view_product": {"description": "Visitante visualizou a página do produto", "payload": ["product_id","margin_flag"]},
+            "exposed_to_variant": {"description": "Visitante foi exposto à variante do experimento", "payload": ["experiment_id","variant","product_id"]},
+            "bundle_opt_in": {"description": "Usuário selecionou o bundle opcional", "payload": ["product_id","bundle_id","opt_in"]},
+            "click_add_to_cart": {"description": "Usuário clicou em adicionar ao carrinho", "payload": ["product_id","bundle_included"]},
+            "purchase": {"description": "Compra concluída", "payload": ["order_id","revenue","items"]}
+        }
+    }
+    </script>
+
+    <!-- Script de demonstração: detecta variante, mostra módulo na Variante B e emite eventos para dataLayer/console -->
+    <script>
+        (function () {
+            // Leitura do produto
+            const productEl = document.querySelector('.product-info');
+            const productId = productEl && productEl.getAttribute('data-product-id') || 'unknown';
+            const marginFlag = productEl && productEl.getAttribute('data-margin-flag') || 'unknown';
+
+            // Detecção simples de variante: url param 'ab' ou persistência em localStorage
+            function getVariant() {
+                const p = new URLSearchParams(location.search).get('ab');
+                if (p === 'B' || p === 'variantB') return 'B';
+                if (p === 'A' || p === 'variantA') return 'A';
+                const key = 'ab_variant_' + productId;
+                const stored = localStorage.getItem(key);
+                if (stored) return stored;
+                const pick = (Math.random() < 0.5) ? 'A' : 'B';
+                localStorage.setItem(key, pick);
+                return pick;
+            }
+
+            const variant = getVariant();
+
+            // Emit helper
+            function emit(eventName, payload) {
+                const data = { event: eventName, variant: variant, product_id: productId, ...payload };
+                if (window.dataLayer && typeof window.dataLayer.push === 'function') {
+                    window.dataLayer.push(data);
+                } else {
+                    console.log('A/B Event:', data);
+                }
+            }
+
+            // Evento de view
+            emit('view_product', { margin_flag: marginFlag });
+
+            // Expor variante
+            emit('exposed_to_variant', { experiment_id: 'high-margin-vpu-001', variant: variant });
+
+            // Se Variante B, mostrar módulo e bundle
+            if (variant === 'B') {
+                const vpu = document.getElementById('value-per-use');
+                const bundle = document.getElementById('bundle-widget');
+                if (vpu) { vpu.setAttribute('aria-hidden', 'false'); vpu.classList.add('vpu-show'); }
+                if (bundle) { bundle.setAttribute('aria-hidden', 'false'); }
+                const cta = document.querySelector('.add-to-cart-btn');
+                if (cta) cta.classList.add('cta-variant');
+
+                try {
+                    const priceText = document.querySelector('.current-price').textContent.replace(/[^0-9,\.]/g, '').replace(',', '.');
+                    const price = parseFloat(priceText) || 0;
+                    const estimatedUses = 180;
+                    const costPerUse = price / estimatedUses;
+                    const formatted = costPerUse.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const el = document.getElementById('vpu-cost');
+                    if (el) el.textContent = formatted + ' / uso';
+                } catch (e) { console.warn('Erro ao calcular cost-per-use', e) }
+            }
+
+            const bundleCheckbox = document.getElementById('bundle-optin');
+            if (bundleCheckbox) {
+                bundleCheckbox.addEventListener('change', function (e) {
+                    emit('bundle_opt_in', { bundle_id: 'bundle-001', opt_in: !!e.target.checked });
+                });
+            }
+
+            const addBtn = document.querySelector('.add-to-cart-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', function () {
+                    const bundleIncluded = !!(document.getElementById('bundle-optin') && document.getElementById('bundle-optin').checked);
+                    emit('click_add_to_cart', { bundle_included: bundleIncluded });
+                    // Simula ação de adicionar ao carrinho
+                    alert('Item adicionado ao carrinho' + (bundleIncluded ? ' (com bundle)' : ''));
+                });
+            }
+
+        })();
+    </script>
+
+</body>
+
+</html>
